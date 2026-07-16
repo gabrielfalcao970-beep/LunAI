@@ -1,64 +1,33 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Google Gemini API integration"""
 
-import logging
-from typing import Optional
+"""
+LunAI Google Gemini API Integration
+Integration with Google Generative AI
+"""
 
+import google.generativeai as genai
 
 class GeminiAPI:
-    """Google Gemini API handler."""
+    """
+    Google Gemini API integration for LunAI.
+    """
     
-    def __init__(self, api_key: str, config):
-        """Initialize Gemini API.
-        
-        Args:
-            api_key: Gemini API key
-            config: Configuration object
-        """
-        self.api_key = api_key
-        self.config = config
-        self.logger = logging.getLogger("LunAI.Gemini")
-        
-        try:
-            import google.generativeai as genai
-            genai.configure(api_key=api_key)
-            self.genai = genai
-            self.model = genai.GenerativeModel('gemini-pro')
-            self.logger.info("Gemini API initialized")
-        except ImportError:
-            self.logger.warning("Google Generative AI library not installed")
-            self.genai = None
+    def __init__(self, api_key: str):
+        """Initialize Gemini API"""
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel('gemini-pro')
     
-    def get_response(self, message: str, context: list = None) -> Optional[str]:
-        """Get response from Gemini.
-        
-        Args:
-            message: User message
-            context: Previous messages context
-            
-        Returns:
-            AI response or None if failed
+    def generate_response(self, prompt: str, conversation_history: list = None) -> str:
         """
-        if not self.genai or not self.api_key:
-            return None
-        
+        Generate response using Gemini API.
+        """
         try:
-            # Start chat session
-            chat = self.model.start_chat(
-                history=context or []
-            )
+            system_prompt = "Você é LunAI, um assistente pessoal de IA amigável e empático. Responda sempre em português de forma concisa."
             
-            # Send message
-            response = chat.send_message(
-                message,
-                generation_config={
-                    "temperature": self.config.TEMPERATURE,
-                    "max_output_tokens": self.config.MAX_TOKENS
-                }
-            )
+            full_prompt = f"{system_prompt}\n\nUsuário: {prompt}\n\nLunAI:"
             
+            response = self.model.generate_content(full_prompt)
             return response.text
-            
         except Exception as e:
-            self.logger.error(f"Gemini API error: {e}")
-            return None
+            return f"Desculpe, ocorreu um erro: {str(e)}"

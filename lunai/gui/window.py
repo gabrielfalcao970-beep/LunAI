@@ -1,165 +1,169 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Main GUI window for LunAI"""
 
-import logging
-from pathlib import Path
+"""
+LunAI Main Window
+PyQt5 GUI for LunAI Assistant
+"""
+
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QTextEdit, QPushButton, QLabel, QScrollArea
 )
+from PyQt5.QtCore import Qt, QSize, QTimer
 from PyQt5.QtGui import QPixmap, QIcon, QFont
-from PyQt5.QtCore import Qt, QTimer
+from pathlib import Path
+import sys
 
 from lunai.core.chatbot import Chatbot
 from lunai.core.sentiment import SentimentAnalyzer
-from lunai.gui.styles import get_stylesheet
-
+from lunai.core.memory import Memory
+from lunai.gui.styles import get_style
 
 class MainWindow(QMainWindow):
-    """Main application window."""
+    """
+    Main application window for LunAI.
+    """
     
     def __init__(self, config):
-        """Initialize main window.
-        
-        Args:
-            config: Configuration object
-        """
+        """Initialize main window"""
         super().__init__()
+        
         self.config = config
-        self.logger = logging.getLogger("LunAI.GUI")
-        
-        # Initialize AI components
-        self.sentiment_analyzer = SentimentAnalyzer(config)
+        self.sentiment_analyzer = SentimentAnalyzer()
         self.chatbot = Chatbot(config, self.sentiment_analyzer)
+        self.memory = Memory()
         
-        # Setup UI
-        self.setup_ui()
-        self.apply_styles()
-        
-        self.logger.info("Main window initialized")
-    
-    def setup_ui(self):
-        """Setup user interface."""
+        # Setup window
         self.setWindowTitle("LunAI - Personal AI Assistant")
-        self.setGeometry(100, 100, self.config.WINDOW_WIDTH, self.config.WINDOW_HEIGHT)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint if self.config.ALWAYS_ON_TOP else Qt.Window)
+        self.setGeometry(100, 100, config.WINDOW_WIDTH, config.WINDOW_HEIGHT)
+        self.setWindowOpacity(config.WINDOW_OPACITY)
         
-        # Central widget
+        # Apply stylesheet
+        self.setStyleSheet(get_style(config.THEME))
+        
+        # Create central widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        main_layout = QVBoxLayout(central_widget)
-        main_layout.setContentsMargins(10, 10, 10, 10)
-        main_layout.setSpacing(10)
         
-        # Header with avatar
-        header_layout = QHBoxLayout()
+        # Create layout
+        layout = QVBoxLayout()
+        central_widget.setLayout(layout)
         
         # Avatar label
         self.avatar_label = QLabel()
-        self.avatar_label.setMaximumWidth(70)
-        self.avatar_label.setMaximumHeight(70)
-        self.update_avatar("neutral")
-        header_layout.addWidget(self.avatar_label)
+        self.avatar_label.setAlignment(Qt.AlignCenter)
+        self.avatar_label.setFixedSize(150, 150)
+        self._load_avatar("neutral.png")
+        layout.addWidget(self.avatar_label, alignment=Qt.AlignCenter)
         
         # Title
-        title_label = QLabel(f"{self.config.AI_NAME}")
+        title = QLabel(config.AI_NAME)
+        title.setAlignment(Qt.AlignCenter)
         title_font = QFont()
         title_font.setPointSize(14)
         title_font.setBold(True)
-        title_label.setFont(title_font)
-        header_layout.addWidget(title_label)
-        header_layout.addStretch()
+        title.setFont(title_font)
+        layout.addWidget(title)
         
-        main_layout.addLayout(header_layout)
-        
-        # Chat display area
+        # Chat display
         self.chat_display = QTextEdit()
         self.chat_display.setReadOnly(True)
-        self.chat_display.setPlaceholderText("Conversation will appear here...\n\nTry saying: Olá, Como você está? ou Estou triste")
-        main_layout.addWidget(self.chat_display)
+        self.chat_display.setMinimumHeight(250)
+        layout.addWidget(self.chat_display)
         
         # Input area
         input_layout = QHBoxLayout()
         
         self.input_field = QTextEdit()
-        self.input_field.setPlaceholderText("Type your message here...")
-        self.input_field.setMaximumHeight(60)
+        self.input_field.setMinimumHeight(60)
+        self.input_field.setMaximumHeight(80)
+        self.input_field.setPlaceholderText("Digite sua mensagem...")
         input_layout.addWidget(self.input_field)
         
         # Send button
-        self.send_button = QPushButton("Send")
+        self.send_button = QPushButton("Enviar")
+        self.send_button.setFixedSize(80, 60)
         self.send_button.clicked.connect(self.send_message)
-        self.send_button.setMaximumWidth(80)
         input_layout.addWidget(self.send_button)
         
-        main_layout.addLayout(input_layout)
+        layout.addLayout(input_layout)
         
         # Status bar
-        self.statusBar().showMessage("Ready")
+        self.statusBar().showMessage("Pronto para conversar...")
         
-        # Connect keyboard shortcut (Enter to send)
-        self.input_field.setFocus()
-    
-    def apply_styles(self):
-        """Apply stylesheet to the application."""
-        stylesheet = get_stylesheet(self.config.THEME)
-        self.setStyleSheet(stylesheet)
-    
-    def update_avatar(self, emotion: str):
-        """Update avatar based on emotion.
-        
-        Args:
-            emotion: Emotion string
-        """
-        avatar_map = {
-            "calm": "calm.png",
-            "neutral": "neutral.png",
-            "surprised": "surprised.png",
-            "worried": "worried.png",
-            "sad": "sad.png",
-            "confused": "confused.png",
-            "thinking": "thinking.png",
-            "happy": "happy.png",
-            "serene": "serene.png",
-            "angry": "angry.png",
-        }
-        
-        avatar_file = avatar_map.get(emotion, "neutral.png")
-        avatar_path = Path("assets/avatars") / avatar_file
-        
-        if avatar_path.exists():
-            pixmap = QPixmap(str(avatar_path))
-            scaled_pixmap = pixmap.scaledToHeight(70, Qt.SmoothTransformation)
-            self.avatar_label.setPixmap(scaled_pixmap)
-        else:
-            # Create placeholder if avatar doesn't exist
-            placeholder = QPixmap(70, 70)
-            placeholder.fill(Qt.gray)
-            self.avatar_label.setPixmap(placeholder)
+        # Show initial greeting
+        self._show_greeting()
     
     def send_message(self):
-        """Send user message and get AI response."""
-        user_message = self.input_field.toPlainText().strip()
+        """
+        Send message and get response.
+        """
+        user_input = self.input_field.toPlainText().strip()
         
-        if not user_message:
+        if not user_input:
             return
         
         # Display user message
-        self.chat_display.append(f"<b>You:</b> {user_message}")
+        self._add_to_chat(f"Você: {user_input}", "user")
         self.input_field.clear()
         
-        # Get AI response
-        response, emotion = self.chatbot.get_response(user_message)
+        # Get response
+        response, sentiment = self.chatbot.process_message(user_input)
+        
+        # Save to memory
+        self.memory.add_message("user", user_input, sentiment)
+        self.memory.add_message("assistant", response, "neutral")
+        
+        # Display response
+        self._add_to_chat(f"LunAI: {response}", "assistant")
         
         # Update avatar
-        self.update_avatar(emotion)
+        if self.config.ENABLE_AVATAR:
+            avatar_file = self.sentiment_analyzer.get_avatar_from_sentiment(sentiment)
+            self._load_avatar(avatar_file)
         
-        # Display AI response
-        self.chat_display.append(f"<b>{self.config.AI_NAME}:</b> {response}")
+        # Update status
+        self.statusBar().showMessage(f"Sentimento detectado: {sentiment}")
+    
+    def _add_to_chat(self, message: str, author: str = "system"):
+        """
+        Add message to chat display.
+        """
+        current_text = self.chat_display.toPlainText()
+        self.chat_display.setText(current_text + "\n" + message if current_text else message)
         
         # Scroll to bottom
         self.chat_display.verticalScrollBar().setValue(
             self.chat_display.verticalScrollBar().maximum()
         )
+    
+    def _load_avatar(self, filename: str):
+        """
+        Load and display avatar.
+        """
+        avatar_path = Path("assets/avatars") / filename
         
-        self.statusBar().showMessage(f"Emotion: {emotion.capitalize()}")
+        if avatar_path.exists():
+            pixmap = QPixmap(str(avatar_path))
+            scaled_pixmap = pixmap.scaledToWidth(150)
+            self.avatar_label.setPixmap(scaled_pixmap)
+        else:
+            # Show placeholder if avatar not found
+            self.avatar_label.setText("🤖")
+    
+    def _show_greeting(self):
+        """
+        Show initial greeting message.
+        """
+        self._add_to_chat(f"LunAI: {self.config.AI_GREETING}")
+        self.memory.add_message("assistant", self.config.AI_GREETING)
+    
+    def closeEvent(self, event):
+        """
+        Handle window close event.
+        """
+        # Save session
+        if self.memory.get_history():
+            self.memory.save_session()
+        event.accept()

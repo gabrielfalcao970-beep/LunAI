@@ -1,105 +1,95 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""GUI Stylesheet definitions"""
 
+"""
+LunAI GUI Styles
+CSS-like styling for PyQt5
+"""
 
-def get_stylesheet(theme: str = "dark") -> str:
-    """Get stylesheet for the application.
-    
-    Args:
-        theme: "dark" or "light"
-        
-    Returns:
-        Stylesheet string
-    """
-    if theme == "light":
-        return LIGHT_STYLESHEET
-    else:
-        return DARK_STYLESHEET
-
-
-DARK_STYLESHEET = """
+DARK_THEME = """
     QMainWindow {
-        background-color: #1a1a2e;
-        color: #eaeaea;
+        background-color: #1e1e1e;
     }
     
     QWidget {
-        background-color: #1a1a2e;
-        color: #eaeaea;
+        background-color: #2d2d2d;
+        color: #ffffff;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        font-size: 10pt;
     }
     
     QTextEdit {
-        background-color: #16213e;
-        color: #eaeaea;
-        border: 2px solid #0f3460;
-        border-radius: 8px;
-        padding: 8px;
-        font-family: 'Segoe UI', Arial, sans-serif;
-        font-size: 10pt;
-        selection-background-color: #00d4ff;
+        background-color: #3d3d3d;
+        color: #ffffff;
+        border: 1px solid #555555;
+        border-radius: 5px;
+        padding: 5px;
     }
     
     QPushButton {
-        background-color: #00d4ff;
-        color: #1a1a2e;
+        background-color: #4CAF50;
+        color: white;
         border: none;
-        border-radius: 6px;
-        padding: 10px 20px;
+        border-radius: 5px;
+        padding: 8px 16px;
         font-weight: bold;
-        font-size: 10pt;
-        font-family: 'Segoe UI', Arial, sans-serif;
     }
     
     QPushButton:hover {
-        background-color: #00e6ff;
+        background-color: #45a049;
     }
     
     QPushButton:pressed {
-        background-color: #00a8cc;
+        background-color: #3d8b40;
     }
     
     QLabel {
-        color: #eaeaea;
+        color: #ffffff;
     }
     
-    QStatusBar {
-        background-color: #16213e;
-        color: #eaeaea;
-        border-top: 1px solid #0f3460;
+    QScrollBar:vertical {
+        background-color: #3d3d3d;
+        width: 10px;
+        border: none;
+    }
+    
+    QScrollBar::handle:vertical {
+        background-color: #555555;
+        border-radius: 5px;
+    }
+    
+    QScrollBar::handle:vertical:hover {
+        background-color: #666666;
     }
 """
 
-LIGHT_STYLESHEET = """
+LIGHT_THEME = """
     QMainWindow {
-        background-color: #f5f5f5;
-        color: #333333;
+        background-color: #ffffff;
     }
     
     QWidget {
         background-color: #f5f5f5;
         color: #333333;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        font-size: 10pt;
     }
     
     QTextEdit {
         background-color: #ffffff;
         color: #333333;
-        border: 2px solid #ddd;
-        border-radius: 8px;
-        padding: 8px;
-        font-family: 'Segoe UI', Arial, sans-serif;
-        font-size: 10pt;
-        selection-background-color: #4CAF50;
+        border: 1px solid #dddddd;
+        border-radius: 5px;
+        padding: 5px;
     }
     
     QPushButton {
         background-color: #4CAF50;
-        color: #ffffff;
+        color: white;
         border: none;
-        border-radius: 6px;
-        padding: 10px 20px;
+        border-radius: 5px;
+        padding: 8px 16px;
         font-weight: bold;
-        font-size: 10pt;
-        font-family: 'Segoe UI', Arial, sans-serif;
     }
     
     QPushButton:hover {
@@ -113,10 +103,12 @@ LIGHT_STYLESHEET = """
     QLabel {
         color: #333333;
     }
-    
-    QStatusBar {
-        background-color: #f0f0f0;
-        color: #333333;
-        border-top: 1px solid #ddd;
-    }
 """
+
+def get_style(theme: str = "dark") -> str:
+    """
+    Get stylesheet for given theme.
+    """
+    if theme.lower() == "light":
+        return LIGHT_THEME
+    return DARK_THEME

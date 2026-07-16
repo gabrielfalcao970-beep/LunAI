@@ -1,63 +1,48 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""OpenAI API integration"""
 
-import logging
-from typing import Optional
+"""
+LunAI OpenAI API Integration
+Integration with OpenAI GPT
+"""
 
+import openai
 
 class OpenAIAPI:
-    """OpenAI API handler."""
+    """
+    OpenAI API integration for LunAI.
+    """
     
-    def __init__(self, api_key: str, config):
-        """Initialize OpenAI API.
-        
-        Args:
-            api_key: OpenAI API key
-            config: Configuration object
-        """
-        self.api_key = api_key
-        self.config = config
-        self.logger = logging.getLogger("LunAI.OpenAI")
-        
-        try:
-            import openai
-            openai.api_key = api_key
-            self.openai = openai
-            self.logger.info("OpenAI API initialized")
-        except ImportError:
-            self.logger.warning("OpenAI library not installed")
-            self.openai = None
+    def __init__(self, api_key: str):
+        """Initialize OpenAI API"""
+        openai.api_key = api_key
+        self.model = "gpt-3.5-turbo"
     
-    def get_response(self, message: str, context: list = None) -> Optional[str]:
-        """Get response from OpenAI.
-        
-        Args:
-            message: User message
-            context: Previous messages context
-            
-        Returns:
-            AI response or None if failed
+    def generate_response(self, prompt: str, conversation_history: list = None) -> str:
         """
-        if not self.openai or not self.api_key:
-            return None
-        
+        Generate response using OpenAI API.
+        """
         try:
-            # Prepare messages
-            messages = []
-            if context:
-                messages.extend(context)
-            messages.append({"role": "user", "content": message})
+            messages = [
+                {"role": "system", "content": "Você é LunAI, um assistente pessoal de IA amigável e empático. Responda sempre em português."},
+            ]
             
-            # Call API
-            response = self.openai.ChatCompletion.create(
-                model=self.config.OPENAI_MODEL,
+            if conversation_history:
+                for msg in conversation_history[-5:]:
+                    messages.append({
+                        "role": msg.get("author", "user"),
+                        "content": msg.get("content", "")
+                    })
+            
+            messages.append({"role": "user", "content": prompt})
+            
+            response = openai.ChatCompletion.create(
+                model=self.model,
                 messages=messages,
-                temperature=self.config.TEMPERATURE,
-                max_tokens=self.config.MAX_TOKENS
+                temperature=0.7,
+                max_tokens=150
             )
             
             return response.choices[0].message.content
-            
         except Exception as e:
-            self.logger.error(f"OpenAI API error: {e}")
-            return None
+            return f"Desculpe, ocorreu um erro: {str(e)}"

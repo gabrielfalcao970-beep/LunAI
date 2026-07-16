@@ -1,60 +1,84 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Conversational memory module"""
 
-import logging
-from typing import List, Dict
-from collections import deque
+"""
+LunAI Conversation Memory
+Manages chat history and persistence
+"""
 
+import json
+from pathlib import Path
+from datetime import datetime
 
-class ConversationMemory:
-    """Manages conversation history and context."""
+class Memory:
+    """
+    Manages conversation history and memory.
+    Saves and loads chat history from disk.
+    """
     
-    def __init__(self, config):
-        """Initialize memory.
-        
-        Args:
-            config: Configuration object
+    def __init__(self):
+        """Initialize memory manager"""
+        self.history_dir = Path("data/chat_history")
+        self.history_dir.mkdir(parents=True, exist_ok=True)
+        self.current_session = []
+    
+    def add_message(self, author: str, content: str, sentiment: str = "neutral"):
         """
-        self.config = config
-        self.logger = logging.getLogger("LunAI.Memory")
-        self.memory = deque(maxlen=config.CONVERSATION_MEMORY)
-    
-    def add_message(self, role: str, content: str, emotion: str = None):
-        """Add message to memory.
-        
-        Args:
-            role: 'user' or 'assistant'
-            content: Message content
-            emotion: Detected emotion (optional)
+        Add message to current session.
         """
         message = {
-            "role": role,
+            "timestamp": datetime.now().isoformat(),
+            "author": author,
             "content": content,
-            "emotion": emotion
+            "sentiment": sentiment
         }
-        self.memory.append(message)
-        self.logger.debug(f"Added to memory: {role} - {content[:50]}...")
+        self.current_session.append(message)
     
-    def get_context(self) -> List[Dict]:
-        """Get current memory context.
-        
-        Returns:
-            List of recent messages
+    def save_session(self, name: str = None) -> str:
         """
-        return list(self.memory)
-    
-    def clear(self):
-        """Clear memory."""
-        self.memory.clear()
-        self.logger.info("Memory cleared")
-    
-    def get_last_emotion(self) -> str:
-        """Get last detected emotion.
-        
-        Returns:
-            Last emotion or 'neutral'
+        Save current session to file.
+        Returns: filename of saved session
         """
-        for message in reversed(self.memory):
-            if message.get("emotion"):
-                return message["emotion"]
-        return "neutral"
+        if not self.current_session:
+            return None
+        
+        if name is None:
+            name = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        
+        filename = self.history_dir / f"{name}.json"
+        
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(self.current_session, f, ensure_ascii=False, indent=2)
+        
+        return str(filename)
+    
+    def load_session(self, filename: str) -> list:
+        """
+        Load session from file.
+        """
+        filepath = self.history_dir / f"{filename}.json"
+        
+        if not filepath.exists():
+            return []
+        
+        with open(filepath, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    
+    def get_history(self) -> list:
+        """
+        Get current session history.
+        """
+        return self.current_session
+    
+    def clear_session(self):
+        """
+        Clear current session.
+        """
+        self.current_session = []
+    
+    def get_last_sessions(self, limit: int = 10) -> list:
+        """
+        Get list of recent sessions.
+        """
+        files = sorted(self.history_dir.glob("*.json"), reverse=True)[:limit]
+        return [f.stem for f in files]

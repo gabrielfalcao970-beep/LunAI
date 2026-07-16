@@ -1,33 +1,61 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Logger configuration for LunAI"""
+
+"""
+LunAI Logging Configuration
+"""
 
 import logging
-import os
+import logging.handlers
 from pathlib import Path
-from datetime import datetime
+import sys
+import coloredlogs
 
-
-def setup_logging(log_level=logging.INFO):
-    """Setup logging configuration."""
+def setup_logging():
+    """
+    Setup logging for LunAI application.
+    Creates log directory and configures logging handlers.
+    """
     
-    # Create logs directory if it doesn't exist
+    # Create logs directory
     log_dir = Path("data/logs")
     log_dir.mkdir(parents=True, exist_ok=True)
     
-    # Create log filename with timestamp
-    log_filename = log_dir / f"lunai_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    # Create logger
+    logger = logging.getLogger("lunai")
+    logger.setLevel(logging.DEBUG)
     
-    # Configure logging
-    logging.basicConfig(
-        level=log_level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_filename),
-            logging.StreamHandler()
-        ]
+    # Remove existing handlers
+    for handler in logger.handlers[:]:
+        logger.removeHandler(handler)
+    
+    # File handler
+    log_file = log_dir / "lunai.log"
+    file_handler = logging.handlers.RotatingFileHandler(
+        log_file,
+        maxBytes=10*1024*1024,  # 10MB
+        backupCount=5
+    )
+    file_handler.setLevel(logging.DEBUG)
+    
+    # Console handler with colors
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.INFO)
+    
+    # Formatter
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
     )
     
-    logger = logging.getLogger("LunAI")
-    logger.info("Logging initialized")
+    file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+    
+    # Add handlers to logger
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+    
+    # Use coloredlogs for console output
+    coloredlogs.install(level='INFO', logger=logger)
     
     return logger
