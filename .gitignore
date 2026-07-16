@@ -1,12 +1,18 @@
-# Byte-compiled / optimized / DLL files
+# LunAI Build Artifacts
+/build/
+/dist/
+/*.spec
+
+# Virtual Environment
+/venv/
+/env/
+/.venv/
+
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -27,33 +33,6 @@ share/python-wheels/
 *.egg
 PIPFILE.lock
 
-# PyInstaller
-*.manifest
-*.spec
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
 # IDE
 .vscode/
 .idea/
@@ -63,9 +42,13 @@ venv.bak/
 .DS_Store
 
 # Project specific
+/data/logs/*
+!/data/logs/.gitkeep
+/data/chat_history/*
+!/data/chat_history/.gitkeep
 config.py
-data/
-!data/.gitkeep
-
-# Logs
 *.log
+
+# OS
+.DS_Store
+Thumbs.db

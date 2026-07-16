@@ -1,24 +1,19 @@
 #!/bin/bash
-# Uninstall script for LunAI
+# Uninstall LunAI
 
-echo "LunAI - Uninstall Script"
-echo ""
+echo "Removing LunAI..."
 
-INSTALL_DIR="$HOME/.local/bin"
-DESKTOP_DIR="$HOME/.local/share/applications"
+# Remove desktop entry
+rm -f ~/.local/share/applications/lunai.desktop
 
-if [ -f "$INSTALL_DIR/LunAI" ]; then
-    echo "Removing LunAI from $INSTALL_DIR..."
-    rm -f "$INSTALL_DIR/LunAI"
-    rm -f "$INSTALL_DIR/lunai"
-    echo "✓ Executable removed"
+# Remove virtual environment
+rm -rf venv
+
+# Optional: remove data
+read -p "Remove chat history and logs? (y/n) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    rm -rf data
 fi
 
-if [ -f "$DESKTOP_DIR/lunai.desktop" ]; then
-    echo "Removing desktop entry..."
-    rm -f "$DESKTOP_DIR/lunai.desktop"
-    echo "✓ Desktop entry removed"
-fi
-
-echo ""
-echo "LunAI has been uninstalled."
+echo "✓ LunAI uninstalled"

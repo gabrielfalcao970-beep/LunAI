@@ -1,21 +1,21 @@
 #!/bin/bash
-# Quick start script for LunAI on Linux
-# Run with: bash start.sh
+# Start LunAI - Quick launch script
 
-echo "LunAI - Starting..."
+echo "🌙 LunAI - Starting..."
 echo ""
 
-# Check if venv exists
-if [ ! -d "venv" ]; then
-    echo "Virtual environment not found. Creating..."
-    python3 -m venv venv
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+# Activate virtual environment if it exists
+if [ -d "venv" ]; then
     source venv/bin/activate
-    echo "Installing dependencies..."
-    pip install -q -r requirements.txt
-    echo "✓ Setup complete!"
 else
-    source venv/bin/activate
+    echo "⚠️  Virtual environment not found."
+    echo "Please run: bash install.sh"
+    exit 1
 fi
 
-echo "Launching LunAI..."
+# Launch application
 python3 main.py

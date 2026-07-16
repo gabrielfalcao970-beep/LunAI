@@ -1,26 +1,25 @@
 #!/bin/bash
-# Desktop entry creator for LunAI
-# Creates a .desktop file for easy application menu integration
-
-DESKTOP_FILE="$HOME/.local/share/applications/lunai.desktop"
+# Create desktop entry for LunAI
 
 echo "Creating desktop entry for LunAI..."
-mkdir -p "$HOME/.local/share/applications"
 
-cat > "$DESKTOP_FILE" << 'EOF'
+DESKTOP_DIR="$HOME/.local/share/applications"
+mkdir -p "$DESKTOP_DIR"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+cat > "$DESKTOP_DIR/lunai.desktop" << EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=LunAI
 Comment=Personal AI Assistant
-Exec=python3 -m lunai.cli
-Icon=lunai
+Exec=bash -c 'cd "$SCRIPT_DIR" && bash start.sh'
+Icon=application-brain
 Terminal=false
-Categories=Utility;Application;
-StartupNotify=true
-X-KDE-RunInTerminal=false
+Categories=Utility;Development;
 EOF
 
-echo "✓ Desktop entry created at: $DESKTOP_FILE"
-echo ""
-echo "You can now find LunAI in your application menu!"
+chmod +x "$DESKTOP_DIR/lunai.desktop"
+
+echo "✓ Desktop entry created at $DESKTOP_DIR/lunai.desktop"
